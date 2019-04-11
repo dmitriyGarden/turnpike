@@ -412,9 +412,9 @@ func createEvent(topicURI string, event interface{}) (string, error) {
 // createWAMPMessagePubSub checks that the second argument (topicURI) is a valid
 // URI and then passes the request on to createWAMPMessage
 func createWAMPMessagePubSub(args ...interface{}) (string, error) {
-	if _, err := url.ParseRequestURI(args[1].(string)); err != nil {
-		return "", &WAMPError{"invalid URI: " + args[1].(string)}
-	}
+	//if _, err := url.ParseRequestURI(args[1].(string)); err != nil {
+	//	return "", &WAMPError{"invalid URI: " + args[1].(string)}
+	//}
 	return createWAMPMessage(args...)
 }
 
