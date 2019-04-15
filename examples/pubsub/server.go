@@ -1,9 +1,8 @@
 package main
 
 import (
+	"github.com/dmitriyGarden/turnpike"
 	"net/http"
-
-	"gopkg.in/jcelliott/turnpike.v1"
 )
 
 func main() {

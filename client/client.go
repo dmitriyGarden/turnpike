@@ -7,11 +7,10 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/dmitriyGarden/turnpike"
 	"os"
 	"strconv"
 	"strings"
-
-	"gopkg.in/jcelliott/turnpike.v1"
 )
 
 func main() {

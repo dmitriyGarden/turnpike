@@ -53,7 +53,7 @@ func TestServer_SubNoHandler(t *testing.T) {
 func TestServer_RegisterSubHandler(t *testing.T) {
 	s := NewServer()
 	subCh := make(chan bool)
-	s.RegisterSubHandler("event:test", func(clientID, topicURI string) bool {
+	s.RegisterSubHandler("event:test", func(clientID, topicURI string, r *http.Request) bool {
 		subCh <- true
 		return true
 	})
@@ -90,7 +90,7 @@ func TestServer_RegisterSubHandler(t *testing.T) {
 
 func TestServer_SubHandlerAccept(t *testing.T) {
 	s := NewServer()
-	s.RegisterSubHandler("event:test", func(clientID, topicURI string) bool {
+	s.RegisterSubHandler("event:test", func(clientID, topicURI string, r *http.Request) bool {
 		return true
 	})
 
@@ -131,7 +131,7 @@ func TestServer_SubHandlerAccept(t *testing.T) {
 
 func TestServer_SubHandlerDeny(t *testing.T) {
 	s := NewServer()
-	s.RegisterSubHandler("event:test", func(clientID, topicURI string) bool {
+	s.RegisterSubHandler("event:test", func(clientID, topicURI string, r *http.Request) bool {
 		return false
 	})
 
@@ -166,7 +166,7 @@ func TestServer_SubHandlerDeny(t *testing.T) {
 func TestServer_RegisterPubHandler(t *testing.T) {
 	s := NewServer()
 	pubCh := make(chan bool)
-	s.RegisterPubHandler("event:test", func(topicURI string, event interface{}) interface{} {
+	s.RegisterPubHandler("event:test", func(topicURI string, event interface{}, r *http.Request) interface{} {
 		pubCh <- true
 		return event
 	})
@@ -204,7 +204,7 @@ func TestServer_RegisterPubHandler(t *testing.T) {
 
 func TestServer_PubHandlerChange(t *testing.T) {
 	s := NewServer()
-	s.RegisterPubHandler("event:test", func(topicURI string, event interface{}) interface{} {
+	s.RegisterPubHandler("event:test", func(topicURI string, event interface{}, r *http.Request) interface{} {
 		return event.(string) + "2"
 	})
 

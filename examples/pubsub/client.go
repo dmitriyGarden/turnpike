@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/dmitriyGarden/turnpike"
 	"time"
-
-	"gopkg.in/jcelliott/turnpike.v1"
 )
 
 func testHandler(uri string, event interface{}) {

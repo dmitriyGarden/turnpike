@@ -6,12 +6,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/dmitriyGarden/turnpike"
+	"golang.org/x/net/websocket"
 	"log"
 	"net/http"
-
-	"golang.org/x/net/websocket"
-
-	"gopkg.in/jcelliott/turnpike.v1"
 )
 
 func main() {

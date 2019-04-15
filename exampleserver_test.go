@@ -1,9 +1,8 @@
 package turnpike_test
 
 import (
+	"github.com/dmitriyGarden/turnpike"
 	"net/http"
-
-	"gopkg.in/jcelliott/turnpike.v1"
 )
 
 func ExampleServer_NewServer() {

@@ -69,12 +69,12 @@ func (e RPCError) Error() string {
 // SubHandler is an interface that handlers for subscriptions should implement to
 // control with subscriptions are valid. A subscription is allowed by returning
 // true or denied by returning false.
-type SubHandler func(clientID string, topicURI string) bool
+type SubHandler func(clientID string, topicURI string, r *http.Request) bool
 
 // PubHandler is an interface that handlers for publishes should implement to
 // get notified on a client publish with the possibility to modify the event.
 // The event that will be published should be returned.
-type PubHandler func(topicURI string, event interface{}) interface{}
+type PubHandler func(topicURI string, event interface{}, request *http.Request) interface{}
 
 // NewServer creates a new WAMP server.
 func NewServer() *Server {
@@ -145,7 +145,7 @@ func (t *Server) SendEvent(topic string, event interface{}) {
 	t.handlePublish(topic, publishMsg{
 		TopicURI: topic,
 		Event:    event,
-	})
+	}, nil)
 }
 
 // ConnectedClients returns a slice of the ids of all connected clients
@@ -160,7 +160,6 @@ func (t *Server) ConnectedClients() []string {
 // HandleWebsocket implements the go.net/websocket.Handler interface.
 func (t *Server) HandleWebsocket(conn *websocket.Conn) {
 	defer conn.Close()
-
 	if debug {
 		log.Print("turnpike: received websocket connection")
 	}
@@ -258,7 +257,7 @@ func (t *Server) HandleWebsocket(conn *websocket.Conn) {
 				}
 				continue
 			}
-			t.handlePrefix(id, msg)
+			t.handlePrefix(id, msg, conn.Request())
 		case msgCall:
 			var msg callMsg
 			err := json.Unmarshal(data, &msg)
@@ -268,7 +267,7 @@ func (t *Server) HandleWebsocket(conn *websocket.Conn) {
 				}
 				continue
 			}
-			t.handleCall(id, msg)
+			t.handleCall(id, msg, conn.Request())
 		case msgSubscribe:
 			var msg subscribeMsg
 			err := json.Unmarshal(data, &msg)
@@ -278,7 +277,7 @@ func (t *Server) HandleWebsocket(conn *websocket.Conn) {
 				}
 				continue
 			}
-			t.handleSubscribe(id, msg)
+			t.handleSubscribe(id, msg, conn.Request())
 		case msgUnsubscribe:
 			var msg unsubscribeMsg
 			err := json.Unmarshal(data, &msg)
@@ -298,7 +297,7 @@ func (t *Server) HandleWebsocket(conn *websocket.Conn) {
 				}
 				continue
 			}
-			t.handlePublish(id, msg)
+			t.handlePublish(id, msg, conn.Request())
 		case msgWelcome, msgCallResult, msgCallError, msgEvent:
 			if debug {
 				log.Printf("turnpike: server -> client message received, ignored: %s", messageTypeString(typ))
@@ -314,7 +313,7 @@ func (t *Server) HandleWebsocket(conn *websocket.Conn) {
 	close(c)
 }
 
-func (t *Server) handlePrefix(id string, msg prefixMsg) {
+func (t *Server) handlePrefix(id string, msg prefixMsg, r *http.Request) {
 	if debug {
 		log.Print("turnpike: handling prefix message")
 	}
@@ -331,7 +330,7 @@ func (t *Server) handlePrefix(id string, msg prefixMsg) {
 	}
 }
 
-func (t *Server) handleCall(id string, msg callMsg) {
+func (t *Server) handleCall(id string, msg callMsg, r *http.Request) {
 	if debug {
 		log.Print("turnpike: handling call message")
 	}
@@ -381,14 +380,14 @@ func (t *Server) handleCall(id string, msg callMsg) {
 	}
 }
 
-func (t *Server) handleSubscribe(id string, msg subscribeMsg) {
+func (t *Server) handleSubscribe(id string, msg subscribeMsg, r *http.Request) {
 	if debug {
 		log.Print("turnpike: handling subscribe message")
 	}
 
 	uri := checkCurie(t.prefixes[id], msg.TopicURI)
 	h := t.getSubHandler(uri)
-	if h != nil && !h(id, uri) {
+	if h != nil && !h(id, uri, r) {
 		if debug {
 			log.Printf("turnpike: client %s denied subscription of topic: %s", id, uri)
 		}
@@ -421,7 +420,7 @@ func (t *Server) handleUnsubscribe(id string, msg unsubscribeMsg) {
 	}
 }
 
-func (t *Server) handlePublish(id string, msg publishMsg) {
+func (t *Server) handlePublish(id string, msg publishMsg, r *http.Request) {
 	if debug {
 		log.Print("turnpike: handling publish message")
 	}
@@ -430,9 +429,11 @@ func (t *Server) handlePublish(id string, msg publishMsg) {
 	h := t.getPubHandler(uri)
 	event := msg.Event
 	if h != nil {
-		event = h(uri, event)
+		event = h(uri, event, r)
 	}
-
+	if event == nil {
+		return
+	}
 	lm, ok := t.subscriptions[uri]
 	if !ok {
 		return
