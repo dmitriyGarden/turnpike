@@ -444,12 +444,14 @@ func (t *Server) handlePublish(id string, msg publishMsg, r *http.Request) {
 	}
 	uri := checkCurie(t.prefixes[id], msg.TopicURI)
 
-	if t.pubHandle != nil {
-
-	}
-
-	h := t.getPubHandler(uri)
 	event := msg.Event
+	if t.pubHandle != nil {
+		event = t.pubHandle(uri, event, r)
+	}
+	if event == nil {
+		return
+	}
+	h := t.getPubHandler(uri)
 	if h != nil {
 		event = h(uri, event, r)
 	}
