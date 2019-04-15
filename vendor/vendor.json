@@ -9,14 +9,6 @@
 			"revisionTime": "2018-08-30T19:11:22Z"
 		},
 		{
-			"checksumSHA1": "vTkJVdqmSiAK0/bZduYWkJeMjqY=",
-			"path": "github.com/dmitriyGarden/turnpike",
-			"revision": "d68a0006b4653ae02f097f93d9318a49540e1929",
-			"revisionTime": "2019-04-15T16:46:57Z",
-			"version": "v1",
-			"versionExact": "v1"
-		},
-		{
 			"checksumSHA1": "gcLub3oB+u4QrOJZcYmk/y2AP4k=",
 			"path": "github.com/nu7hatch/gouuid",
 			"revision": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3",

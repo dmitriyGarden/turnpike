@@ -31,6 +31,8 @@ const (
 
 // Server represents a WAMP server that handles RPC and pub/sub.
 type Server struct {
+	subHandle SubHandler
+	pubHandle PubHandler
 	// Client ID -> send channel
 	clients map[string]chan string
 	// Client ID -> prefix mapping
@@ -79,6 +81,8 @@ type PubHandler func(topicURI string, event interface{}, request *http.Request) 
 // NewServer creates a new WAMP server.
 func NewServer() *Server {
 	s := &Server{
+		subHandle:     nil,
+		pubHandle:     nil,
 		clients:       make(map[string]chan string),
 		prefixes:      make(map[string]prefixMap),
 		rpcHandlers:   make(map[string]RPCHandler),
@@ -138,6 +142,14 @@ func (t *Server) RegisterPubHandler(uri string, f PubHandler) {
 // UnregisterPubHandler removes a publish handler for the URI.
 func (t *Server) UnregisterPubHandler(uri string) {
 	delete(t.pubHandlers, uri)
+}
+
+func (t *Server) SetSubHandler(f SubHandler) {
+	t.subHandle = f
+}
+
+func (t *Server) SetPubHandler(f PubHandler) {
+	t.pubHandle = f
 }
 
 // SendEvent sends an event with topic directly (not via Client.Publish())
@@ -386,6 +398,12 @@ func (t *Server) handleSubscribe(id string, msg subscribeMsg, r *http.Request) {
 	}
 
 	uri := checkCurie(t.prefixes[id], msg.TopicURI)
+	if t.subHandle != nil && !t.subHandle(id, uri, r) {
+		if debug {
+			log.Printf("turnpike: client %s denied subscription of topic: %s", id, uri)
+		}
+		return
+	}
 	h := t.getSubHandler(uri)
 	if h != nil && !h(id, uri, r) {
 		if debug {
@@ -425,6 +443,10 @@ func (t *Server) handlePublish(id string, msg publishMsg, r *http.Request) {
 		log.Print("turnpike: handling publish message")
 	}
 	uri := checkCurie(t.prefixes[id], msg.TopicURI)
+
+	if t.pubHandle != nil {
+
+	}
 
 	h := t.getPubHandler(uri)
 	event := msg.Event
